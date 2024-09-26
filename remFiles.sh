@@ -1,1 +1,0 @@
-rm -r loader.o kernel.o mykernel.bin mykernel.iso iso
