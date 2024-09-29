@@ -2,8 +2,10 @@
 #include "gdt.h"
 #include "interrupts.h"
 #include "keyboard.h"
+#include "mouse.h"
 
 void clrscr();
+void printHex(uint8_t key);
 
 void printf(char* str){
     static uint16_t* VideoMemory = (uint16_t*)0xb8000;
@@ -26,7 +28,7 @@ void printf(char* str){
                 } else {
                     x--;
                 }
-                VideoMemory[80*y+x] = (VideoMemory[80*y+x] & 0x8F00) | (int)" ";
+                VideoMemory[80*y+x] = (VideoMemory[80*y+x] & 0xFF00);
             }; break;
             default:
                 VideoMemory[80*y+x] = (VideoMemory[80*y+x] & 0x8F00) | str[i];
@@ -64,7 +66,7 @@ extern "C" void callConstructors(){
 
 extern "C" void myKernel(const void* multiboot_structure, uint32_t /*multiboot_magic*/){
     clrscr();
-    printf("\n_____________________________ Kushagra's OS Kernel ____________________________\n");
+    printf("\n_____________________________ Kushagra's OS Kernel _____________________________\n");
     
     GlobalDescriptorTable gdt;
 
@@ -74,6 +76,7 @@ extern "C" void myKernel(const void* multiboot_structure, uint32_t /*multiboot_m
     InterruptManager interrupts(0x20, &gdt);
 
     KeyboardDriver keyboard(&interrupts);
+    MouseDriver mouse(&interrupts);
     
     interrupts.Activate();
 
