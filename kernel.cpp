@@ -1,10 +1,11 @@
 #include "types.h"
 #include "gdt.h"
 #include "interrupts.h"
+#include "keyboard.h"
 
 void clrscr();
 
-void print(char* str){
+void printf(char* str){
     static uint16_t* VideoMemory = (uint16_t*)0xb8000;
 
     static uint8_t x=0, y=0;
@@ -16,16 +17,30 @@ void print(char* str){
             x = y = 0;
         }
         switch(str[i]){
-            case '\n':
-                x = 0; y++; break;
-            case '\t':
-                x += 4; break;
+            case '\n': x = 0; y++; break;
+            case '\t': x += 4; break;
+            case '\b': if (y!=0){
+                if (x==0){
+                    y--;
+                    x=79;
+                } else {
+                    x--;
+                }
+                VideoMemory[80*y+x] = (VideoMemory[80*y+x] & 0x8F00) | (int)" ";
+            }; break;
             default:
                 VideoMemory[80*y+x] = (VideoMemory[80*y+x] & 0x8F00) | str[i];
                 x++;
         }
     }
-    y++; x=0;
+}
+
+void printHex(uint8_t key){
+    char* hex = "0123456789ABCDEF";
+    char* foo = "00";
+    foo[0] = hex[(key >> 4) & 0x0F];
+    foo[1] = hex[key & 0x0F];
+    printf(foo);
 }
 
 void clrscr(){
@@ -35,6 +50,8 @@ void clrscr(){
         VideoMemory[i] = (VideoMemory[i] & 0xFF00);   
     }
 }
+
+// ========================================== KERNEL ==============================================
 
 typedef void (*constructor)();
 extern "C" constructor start_ctors;
@@ -47,17 +64,22 @@ extern "C" void callConstructors(){
 
 extern "C" void myKernel(const void* multiboot_structure, uint32_t /*multiboot_magic*/){
     clrscr();
-    print("\n_____________________________ Kushagra's OS Kernel _____________________________");
+    printf("\n_____________________________ Kushagra's OS Kernel ____________________________\n");
     
     GlobalDescriptorTable gdt;
 
-    print("\n> Global Descriptor Table ......... CHECK");
-    print("> Ports ........................... CHECK");
+    printf("\n> Global Descriptor Table ......... CHECK\n");
+    printf("> Ports ........................... CHECK\n");
     
     InterruptManager interrupts(0x20, &gdt);
+
+    KeyboardDriver keyboard(&interrupts);
+    
     interrupts.Activate();
 
-    print("> Interrupts Activated ............ CHECK");
+    printf("> Interrupts Activated ............ CHECK\n\n");
+    printf("Activating SHELL ---\n");
+    printf("$ ");
 
     while(1);
 }
