@@ -70,7 +70,7 @@ extern "C" void callConstructors(){
     }
 }
 
-extern "C" void myKernel(const void* multiboot_structure, uint32_t /*multiboot_magic*/){
+extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot_magic*/){
     clrscr();
     printf("\n_____________________________ Kushagra's OS Kernel _____________________________\n");
     
@@ -82,8 +82,11 @@ extern "C" void myKernel(const void* multiboot_structure, uint32_t /*multiboot_m
     InterruptManager interrupts(0x20, &gdt);
     DriverManager drvManager;
 
-    KeyboardDriver keyboard(&interrupts);
-    MouseDriver mouse(&interrupts);
+    KeyboardEventHandler kbhandler;
+    KeyboardDriver keyboard(&interrupts, &kbhandler);
+
+    MouseEventHandler mhandler;
+    MouseDriver mouse(&interrupts, &mhandler);
 
     drvManager.AddDriver(&keyboard);
     drvManager.AddDriver(&mouse);

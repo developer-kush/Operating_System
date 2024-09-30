@@ -8,7 +8,7 @@
     .long CHECKSUM
 
 .section .text
-.extern myKernel
+.extern kernelMain
 .global loader
 
 loader: 
@@ -18,7 +18,7 @@ loader:
 
     push %eax
     push %ebx
-    call myKernel
+    call kernelMain
 
 _stop:
     cli

@@ -9,8 +9,21 @@ void printHex(uint8_t key);
 void printf(char* str);
 void clrscr();
 
-MouseDriver::MouseDriver(InterruptManager* manager)
-: InterruptHandler(manager, 0x2C), dataport(0x60), commandport(0x64) {}
+// ==================================== MOUSE EVENT HANDLER =====================================
+
+MouseEventHandler::MouseEventHandler(){};
+
+void MouseEventHandler::OnActivate(){};
+void MouseEventHandler::OnMouseDown(uint8_t button){};
+void MouseEventHandler::OnMouseUp(uint8_t button){};
+void MouseEventHandler::OnMouseMove(int x, int y){};
+
+// ======================================== MOUSE DRIVER ========================================
+
+MouseDriver::MouseDriver(InterruptManager* manager, MouseEventHandler* handler)
+: InterruptHandler(manager, 0x2C), dataport(0x60), commandport(0x64) {
+    this->handler = handler;
+}
 
 void MouseDriver::Activate(){
 
