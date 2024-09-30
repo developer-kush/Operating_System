@@ -1,12 +1,18 @@
 
-#include "mouse.h"
+#include <drivers/mouse.h>
+
+using namespace myos::common;
+using namespace myos::drivers;
+using namespace myos::hardwarecommunication;
 
 void printHex(uint8_t key);
 void printf(char* str);
 void clrscr();
 
 MouseDriver::MouseDriver(InterruptManager* manager)
-: InterruptHandler(manager, 0x2C), dataport(0x60), commandport(0x64) {
+: InterruptHandler(manager, 0x2C), dataport(0x60), commandport(0x64) {}
+
+void MouseDriver::Activate(){
 
     offset = 0;
     buttons = 0;

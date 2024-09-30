@@ -1,12 +1,20 @@
 
-#include "keyboard.h"
+#include <drivers/keyboard.h>
+#include <drivers/driver.h>
+
+using namespace myos::common;
+using namespace myos::drivers;
+using namespace myos::hardwarecommunication;
+
 
 void printHex(uint8_t key);
 void printf(char* str);
 void clrscr();
 
 KeyboardDriver::KeyboardDriver(InterruptManager* manager)
-: InterruptHandler(manager, 0x21), dataport(0x60), commandport(0x64) {
+: InterruptHandler(manager, 0x21), dataport(0x60), commandport(0x64) {}
+
+void KeyboardDriver::Activate(){
     while (commandport.Read() & 0x1){
         dataport.Read();
     }

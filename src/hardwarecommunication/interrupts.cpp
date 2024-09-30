@@ -1,5 +1,9 @@
 
-#include "interrupts.h"
+#include <hardwarecommunication/interrupts.h>
+
+using namespace myos::common;
+using namespace myos::hardwarecommunication;
+
 
 void print(char* str);
 void printf(char* str);

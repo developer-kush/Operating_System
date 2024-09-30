@@ -1,8 +1,14 @@
-#include "types.h"
-#include "gdt.h"
-#include "interrupts.h"
-#include "keyboard.h"
-#include "mouse.h"
+#include <common/types.h>
+#include <gdt.h>
+#include <hardwarecommunication/interrupts.h>
+#include <drivers/keyboard.h>
+#include <drivers/mouse.h>
+#include <drivers/driver.h>
+
+using namespace myos;
+using namespace myos::common;
+using namespace myos::drivers;
+using namespace myos::hardwarecommunication;
 
 void clrscr();
 void printHex(uint8_t key);
@@ -74,9 +80,14 @@ extern "C" void myKernel(const void* multiboot_structure, uint32_t /*multiboot_m
     printf("> Ports ........................... CHECK\n");
     
     InterruptManager interrupts(0x20, &gdt);
+    DriverManager drvManager;
 
     KeyboardDriver keyboard(&interrupts);
     MouseDriver mouse(&interrupts);
+
+    drvManager.AddDriver(&keyboard);
+    drvManager.AddDriver(&mouse);
+    drvManager.ActivateAll();
     
     interrupts.Activate();
 
