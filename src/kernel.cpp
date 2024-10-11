@@ -101,13 +101,13 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     drvManager.ActivateAll();
     interrupts.Activate();
 
-    vga.SetMode(320, 200, 8);
+    // vga.SetMode(320, 200, 8);
 
-    for (uint32_t y=0; y<200; y++){
-        for (uint32_t x=0; x < 320; x++){
-            vga.PutPixel(x, y, 0x00, 0x00, 0xA8);
-        }
-    }
+    // for (uint32_t y=0; y<200; y++){
+    //     for (uint32_t x=0; x < 320; x++){
+    //         vga.PutPixel(x, y, 0x00, 0x00, 0xA8);
+    //     }
+    // }
 
     printf("> Interrupts Activated ............ CHECK\n\n");
     printf("Activating SHELL ---\n");

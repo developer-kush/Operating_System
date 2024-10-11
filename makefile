@@ -12,7 +12,12 @@ objects = obj/loader.o \
           obj/drivers/keyboard.o \
           obj/drivers/mouse.o \
 		  obj/drivers/vga.o \
-          obj/kernel.o
+          obj/kernel.o \
+		  # obj/lib/gui/widget.o \
+		  obj/lib/gui/window.o \
+		  obj/lib/gui/desktop.o \
+		  obj/common/tbi.o \
+		  obj/multitasking.o \
 
 obj/%.o: src/%.cpp
 	mkdir -p $(@D)
