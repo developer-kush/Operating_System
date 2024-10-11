@@ -7,6 +7,7 @@
 #include <drivers/driver.h>
 #include <drivers/vga.h>
 #include <multitasking.h>
+#include <memorymanagement.h>
 
 using namespace myos;
 using namespace myos::common;
@@ -14,6 +15,7 @@ using namespace myos::drivers;
 using namespace myos::hardwarecommunication;
 
 // #define __ADD_TASKS
+// #define __DYNAMIC_MEMORY_TESTS
 
 void clrscr();
 void printHex(uint8_t key);
@@ -95,9 +97,52 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     printf("\n_____________________________ Kushagra's OS Kernel _____________________________\n");
     
     GlobalDescriptorTable gdt;
+
     TaskManager taskManager;
 
-    #ifdef __ADD_TASKS
+    uint32_t* memupper = (uint32_t*)(((size_t)multiboot_structure) + 8);
+    size_t heap = 10*1024*1024;
+    MemoryManager memoryManager(heap, (size_t)((*memupper)*1024 - heap - 10*1024));
+
+    #ifdef __DYNAMIC_MEMORY_TESTS // -------------------------------------- DYNAMIC MEMORY TESTS
+        printf("\n> Dynamic Memory Tests ........... CHECKING\n");
+        printf("  Heap: 0x");
+        printHex((heap >> 24) & 0xFF);
+        printHex((heap >> 16) & 0xFF);
+        printHex((heap >> 8) & 0xFF);
+        printHex(heap & 0xFF);
+
+        struct Point {
+            int x, y, z;
+        };
+
+        void* alloc1 = new Point();
+        printf("\n  Allocated 12 bytes at 0x");
+        printHex((((size_t)alloc1) >> 24) & 0xFF);
+        printHex((((size_t)alloc1) >> 16) & 0xFF);
+        printHex((((size_t)alloc1) >> 8) & 0xFF);
+        printHex(((size_t)alloc1) & 0xFF);
+
+        void* alloc2 = new Point();
+        printf("\n  Allocated 12 bytes at 0x");
+        printHex((((size_t)alloc2) >> 24) & 0xFF);
+        printHex((((size_t)alloc2) >> 16) & 0xFF);
+        printHex((((size_t)alloc2) >> 8) & 0xFF);
+        printHex(((size_t)alloc2) & 0xFF);
+
+        delete alloc1;
+        printf("\n  Freed 1024 bytes at 0x");
+
+        void* alloc3 = new Point();
+        printf("\n  Allocated 12 bytes at 0x");
+        printHex((((size_t)alloc3) >> 24) & 0xFF);
+        printHex((((size_t)alloc3) >> 16) & 0xFF);
+        printHex((((size_t)alloc3) >> 8) & 0xFF);
+        printHex(((size_t)alloc3) & 0xFF);
+
+    #endif
+
+    #ifdef __ADD_TASKS // ------------------------------------------------- TASK MANAGER TESTS
         Task task1(&gdt, TaskA);
         Task task2(&gdt, TaskB);
         taskManager.AddTask(&task1);

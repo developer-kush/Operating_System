@@ -53,6 +53,7 @@ bool TaskManager::AddTask(Task* task){
         return false;
     }
     tasks[numTasks++] = task;
+    return true;
 };
 
 CPUState* TaskManager::Schedule(CPUState* cpustate){

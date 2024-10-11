@@ -1,5 +1,6 @@
 
 #include <hardwarecommunication/pci.h>
+#include <memorymanagement.h> 
 
 using namespace myos::common;
 using namespace myos::drivers;
@@ -125,11 +126,13 @@ BaseAddressRegister PCIController::GetBaseAddressRegister(uint16_t bus, uint16_t
 }
 
 Driver* PCIController::GetDriver(PCIDeviceDescriptor dev, InterruptManager* interruptManager){
+    Driver* driver = 0;
 
     switch (dev.vendor_id){
         case 0x1022:                    //AMD
             switch (dev.device_id){
                 case 0x2000: 
+                // driver = new AdvancedTechnologyAttachment();
                 printf("AMD a79c973 Driver Loading ...");
                 break; // am79c973
             }
@@ -147,7 +150,7 @@ Driver* PCIController::GetDriver(PCIDeviceDescriptor dev, InterruptManager* inte
             }
     }
 
-    return 0;
+    return driver;
 }
 
 PCIDeviceDescriptor PCIController::GetDeviceDescriptor(uint16_t bus, uint16_t device, uint16_t function){
