@@ -149,8 +149,8 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
         taskManager.AddTask(&task2);
     #endif
 
-    printf("\n> Global Descriptor Table ......... CHECK\n");
-    printf("> Ports ........................... CHECK\n");
+    printf("\n> Global Descriptor Table ......... CHECK");
+    printf("\n> Ports ........................... CHECK");
     
     InterruptManager interrupts(0x20, &gdt, &taskManager);
     DriverManager drvManager;
@@ -179,11 +179,11 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     //     }
     // }
 
-    printf("> Interrupts Activated ............ CHECK\n\n");
+    interrupts.Activate();
+    printf("\n> Interrupts Activated ............ CHECK\n\n");
+
     printf("Activating SHELL ---\n");
     printf("$ ");
-
-    interrupts.Activate();
 
     while(1);
 }

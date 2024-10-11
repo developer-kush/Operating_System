@@ -1,6 +1,7 @@
 
 #include <hardwarecommunication/pci.h>
 #include <memorymanagement.h> 
+#include <drivers/amd_am79c973.h>
 
 using namespace myos::common;
 using namespace myos::drivers;
@@ -51,7 +52,7 @@ bool PCIController::DeviceHasFunctions(uint16_t bus, uint16_t device){
     return Read(bus, device, 0, 0x0E) & (1 << 7);
 }
 
-void PCIController::SelectDrivers(DriverManager* driverManager, InterruptManager* interruptManager){
+void PCIController::SelectDrivers(DriverManager* driverManager, InterruptManager* interrupts){
     for (int bus = 0; bus < 8; bus++){
         for (int device = 0; device < 32; device++){
             int numFunctions = DeviceHasFunctions(bus, device) ? 8 : 1 ;
@@ -61,18 +62,19 @@ void PCIController::SelectDrivers(DriverManager* driverManager, InterruptManager
                 if (dev.vendor_id == 0x0000 || dev.vendor_id == 0xFFFF) continue;
 
                 for (int barNum = 0; barNum < 6; barNum++){
-                    BaseAddressRegister bar = GetBaseAddressRegister(bus, device, function, barNum, interruptManager);
+                    BaseAddressRegister bar = GetBaseAddressRegister(bus, device, function, barNum);
                     if (bar.address && (bar.type == InputOutput)){
                         dev.portBase = (uint32_t)bar.address;
                     }
 
-                    Driver* driver = GetDriver(dev, interruptManager);
-                    if (driver != 0){
-                        driverManager->AddDriver(driver);
-                    }
+                }
+                
+                Driver* driver = GetDriver(dev, interrupts);
+                if (driver != 0){
+                    driverManager->AddDriver(driver);
                 }
 
-                printf("PCI BUS:");
+                printf("\nPCI BUS:");
                 printHex(bus & 0xFF);
 
                 printf(", DEVICE: ");
@@ -88,35 +90,32 @@ void PCIController::SelectDrivers(DriverManager* driverManager, InterruptManager
                 printf(", DEVICE ID: ");
                 printHex((dev.device_id & 0xFF00)>>8);
                 printHex(dev.device_id & 0xFF);
-
-                printf("\n");
             }
         }
     }
 }
 
-BaseAddressRegister PCIController::GetBaseAddressRegister(uint16_t bus, uint16_t device, uint16_t function, uint16_t bar, InterruptManager* interruptManager){
+BaseAddressRegister PCIController::GetBaseAddressRegister(uint16_t bus, uint16_t device, uint16_t function, uint16_t bar){
     BaseAddressRegister result;
 
     uint32_t headertype = Read(bus, device, function, 0x0E) & 0x7F;
     int maxBARs = 6 - (4*headertype);
-    if (bar >= maxBARs){
+    if(bar >= maxBARs){
         return result;
     }
-
-    uint32_t barValue = Read(bus, device, bar, 0x10 + (4*bar));
-    result.type = barValue & 0x1 ? InputOutput : MemoryMapping;
-
+    
+    uint32_t barValue = Read(bus, device, function, 0x10 + 4*bar);
+    result.type = (barValue & 0x1) ? InputOutput : MemoryMapping;
     uint32_t temp;
 
 
     if (result.type == MemoryMapping){
-        result.prefetchable = barValue & 0x8;
-        switch ((barValue >> 1) & 0x3){
-            case 0: break; 
-            case 1: break;
-            case 2: break;
-        }
+        // result.prefetchable = barValue & 0x8;
+        // switch ((barValue >> 1) & 0x3){
+        //     case 0: break; // 32-bit mode
+        //     case 1: break; // 20-bit mode
+        //     case 2: break; // 64-bit mode
+        // }
     } else {
         result.address = (uint8_t*)(barValue & ~0x3);
         result.prefetchable = false;
@@ -125,15 +124,18 @@ BaseAddressRegister PCIController::GetBaseAddressRegister(uint16_t bus, uint16_t
     return result;
 }
 
-Driver* PCIController::GetDriver(PCIDeviceDescriptor dev, InterruptManager* interruptManager){
+Driver* PCIController::GetDriver(PCIDeviceDescriptor dev, InterruptManager* interrupts){
     Driver* driver = 0;
 
     switch (dev.vendor_id){
         case 0x1022:                    //AMD
             switch (dev.device_id){
-                case 0x2000: 
-                // driver = new AdvancedTechnologyAttachment();
-                printf("AMD a79c973 Driver Loading ...");
+                case 0x2000:
+                    driver = (AMD_AM79C973*)MemoryManager::activeMemoryManager->malloc(sizeof(AMD_AM79C973));
+                    if(driver != 0){
+                        new (driver) AMD_AM79C973(&dev, interrupts);
+                    }
+                    return driver;
                 break; // am79c973
             }
             break;
@@ -145,7 +147,7 @@ Driver* PCIController::GetDriver(PCIDeviceDescriptor dev, InterruptManager* inte
         case 0x03:      //graphics
             switch (dev.subclass_id){
                 case 0x00:      //VGA Graphics
-                printf("VGA Driver Loading ...");
+                // printf("\nVGA Driver Loading ...");
                 break;
             }
     }
@@ -168,7 +170,7 @@ PCIDeviceDescriptor PCIController::GetDeviceDescriptor(uint16_t bus, uint16_t de
     result.interface_id = Read(bus, device, function, 0x09);
 
     result.revision = Read(bus, device, function, 0x08);
-    result.vendor_id = Read(bus, device, function, 0x3C);
+    result.interrupt = Read(bus, device, function, 0x3c);
 
     return result;
 }
