@@ -1,6 +1,8 @@
 
+#include <multitasking.h>
 #include <hardwarecommunication/interrupts.h>
 
+using namespace myos;
 using namespace myos::common;
 using namespace myos::hardwarecommunication;
 
@@ -48,11 +50,14 @@ void InterruptManager::SetInterruptDescriptorTableEntry(
 
 InterruptManager::InterruptManager(
     uint16_t hardwareInterruptOffset, 
-    GlobalDescriptorTable* globalDescriptorTable
+    GlobalDescriptorTable* globalDescriptorTable,
+    TaskManager* taskManager
 ) : programmableInterruptControllerMasterCommandPort(0x20), 
     programmableInterruptControllerMasterDataPort(0x21),
     programmableInterruptControllerSlaveCommandPort(0xA0), 
     programmableInterruptControllerSlaveDataPort(0xA1) {
+
+    this->taskManager = taskManager;
 
     this->hardwareInterruptOffset = hardwareInterruptOffset;
     uint32_t CodeSegment = globalDescriptorTable->CodeSegmentSelector();
@@ -160,11 +165,12 @@ uint32_t InterruptManager::DoHandleInterrupt(uint8_t interrupt, uint32_t esp){
     if(handlers[interrupt] != 0){
         esp = handlers[interrupt]->HandleInterrupt(esp);
     } else if(interrupt != hardwareInterruptOffset) {
-        char* foo = "UNHANDLED INTERRUPT 0x00";
-        char* hex = "0123456789ABCDEF";
-        foo[22] = hex[(interrupt >> 4) & 0xF];
-        foo[23] = hex[interrupt & 0xF];
-        printf(foo);
+        printf(" 0x");
+        printHex(interrupt);
+    }
+
+    if (interrupt == hardwareInterruptOffset){
+        esp = (uint32_t)taskManager->Schedule((CPUState*)esp);
     }
 
     if(hardwareInterruptOffset <= interrupt && interrupt < hardwareInterruptOffset+16)

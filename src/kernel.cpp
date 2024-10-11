@@ -6,11 +6,14 @@
 #include <drivers/mouse.h>
 #include <drivers/driver.h>
 #include <drivers/vga.h>
+#include <multitasking.h>
 
 using namespace myos;
 using namespace myos::common;
 using namespace myos::drivers;
 using namespace myos::hardwarecommunication;
+
+// #define __ADD_TASKS
 
 void clrscr();
 void printHex(uint8_t key);
@@ -61,6 +64,21 @@ void clrscr(){
     }
 }
 
+// ================================= TASKS FOR TASK MANAGER =======================================
+
+#ifdef __ADD_TASKS
+void TaskA(){
+    while(1){
+        printf("A");
+    }
+}
+void TaskB(){
+    while(1){
+        printf("B");
+    }
+}
+#endif
+
 // ========================================== KERNEL ==============================================
 
 typedef void (*constructor)();
@@ -77,11 +95,19 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     printf("\n_____________________________ Kushagra's OS Kernel _____________________________\n");
     
     GlobalDescriptorTable gdt;
+    TaskManager taskManager;
+
+    #ifdef __ADD_TASKS
+        Task task1(&gdt, TaskA);
+        Task task2(&gdt, TaskB);
+        taskManager.AddTask(&task1);
+        taskManager.AddTask(&task2);
+    #endif
 
     printf("\n> Global Descriptor Table ......... CHECK\n");
     printf("> Ports ........................... CHECK\n");
     
-    InterruptManager interrupts(0x20, &gdt);
+    InterruptManager interrupts(0x20, &gdt, &taskManager);
     DriverManager drvManager;
 
     KeyboardEventHandler kbhandler;
@@ -99,7 +125,6 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     VideoGraphicsArray vga;
 
     drvManager.ActivateAll();
-    interrupts.Activate();
 
     // vga.SetMode(320, 200, 8);
 
@@ -112,6 +137,8 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     printf("> Interrupts Activated ............ CHECK\n\n");
     printf("Activating SHELL ---\n");
     printf("$ ");
+
+    interrupts.Activate();
 
     while(1);
 }

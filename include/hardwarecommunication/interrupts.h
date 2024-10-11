@@ -4,6 +4,7 @@
 
 #include <common/types.h>
 #include <gdt.h>
+#include <multitasking.h>
 #include <hardwarecommunication/port.h>
 
 namespace myos {
@@ -28,6 +29,8 @@ namespace myos {
             friend class InterruptHandler;
             
             protected:
+
+                myos::TaskManager* taskManager;
 
                 static InterruptManager* ActiveInterruptManager;
                 InterruptHandler* handlers[256];
@@ -105,7 +108,7 @@ namespace myos {
                 myos::hardwarecommunication::Port8BitSlow programmableInterruptControllerSlaveDataPort;
 
             public:
-                InterruptManager(myos::common::uint16_t hardwareInterruptOffset, myos::GlobalDescriptorTable* globalDescriptorTable);
+                InterruptManager(myos::common::uint16_t hardwareInterruptOffset, myos::GlobalDescriptorTable* globalDescriptorTable, myos::TaskManager* taskManager);
                 ~InterruptManager();
                 myos::common::uint16_t HardwareInterruptOffset();
                 void Activate();

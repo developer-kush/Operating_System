@@ -8,6 +8,7 @@ objects = obj/loader.o \
           obj/hardwarecommunication/port.o \
           obj/hardwarecommunication/interruptstubs.o \
           obj/hardwarecommunication/interrupts.o \
+		  obj/multitasking.o \
           obj/hardwarecommunication/pci.o \
           obj/drivers/keyboard.o \
           obj/drivers/mouse.o \
@@ -17,7 +18,6 @@ objects = obj/loader.o \
 		  obj/lib/gui/window.o \
 		  obj/lib/gui/desktop.o \
 		  obj/common/tbi.o \
-		  obj/multitasking.o \
 
 obj/%.o: src/%.cpp
 	mkdir -p $(@D)
