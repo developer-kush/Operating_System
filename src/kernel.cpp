@@ -12,15 +12,17 @@
 #include <drivers/amd_am79c973.h>
 #include <drivers/ata.h>
 
+#include <syscalls.h>
+
 using namespace myos;
 using namespace myos::common;
 using namespace myos::drivers;
 using namespace myos::hardwarecommunication;
 
-// #define __ADD_TASKS
 // #define __DYNAMIC_MEMORY_TESTS
 // #define __AMD_AM79C973_TESTS
 // #define __ATA_TESTS
+// #define __SYSTEM_CALL_TASKS
 
 void clrscr();
 void scrlDown(uint8_t lines = 1);
@@ -96,15 +98,20 @@ void clrscr(){
 
 // ================================= TASKS FOR TASK MANAGER =======================================
 
-#ifdef __ADD_TASKS
+#ifdef __SYSTEM_CALL_TASKS
+
+void sysprintf(char* str){
+    asm("int $0x80" : : "a" (4), "b" (str));
+}
+
 void TaskA(){
     while(1){
-        printf("A");
+        sysprintf("A");
     }
 }
 void TaskB(){
     while(1){
-        printf("B");
+        sysprintf("B");
     }
 }
 #endif
@@ -170,7 +177,7 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 
     #endif
 
-    #ifdef __ADD_TASKS // ------------------------------------------------- TASK MANAGER TESTS
+    #ifdef __SYSTEM_CALL_TASKS // ----------------------------------------- SYSTEM CALL TESTS
         Task task1(&gdt, TaskA);
         Task task2(&gdt, TaskB);
         taskManager.AddTask(&task1);
@@ -181,6 +188,7 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     printf("\n> Ports ........................... CHECK");
     
     InterruptManager interrupts(0x20, &gdt, &taskManager);
+    SyscallHandler syscalls(&interrupts, 0x80);
     DriverManager drvManager;
 
     KeyboardEventHandler kbhandler;
