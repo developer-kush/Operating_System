@@ -10,6 +10,7 @@
 #include <memorymanagement.h>
 
 #include <drivers/amd_am79c973.h>
+#include <drivers/ata.h>
 
 using namespace myos;
 using namespace myos::common;
@@ -19,6 +20,7 @@ using namespace myos::hardwarecommunication;
 // #define __ADD_TASKS
 // #define __DYNAMIC_MEMORY_TESTS
 // #define __AMD_AM79C973_TESTS
+// #define __ATA_TESTS
 
 void clrscr();
 void scrlDown(uint8_t lines = 1);
@@ -210,6 +212,37 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
         eth0->Send((uint8_t*)"Hello, World!", 13);
     #endif
 
+    AdvancedTechnologyAttachment ata0m(0x1F0, true);
+    printf("\nATA Primary Master: ");
+    ata0m.Identify();
+
+    AdvancedTechnologyAttachment ata0s(0x1F0, false);
+    printf("\nATA Primary Slave: ");
+    ata0s.Identify();
+
+    AdvancedTechnologyAttachment ata1m(0x170, true);
+    printf("\nATA Secondary Master: ");
+    ata1m.Identify();
+
+    AdvancedTechnologyAttachment ata1s(0x170, false);
+    printf("\nATA Secondary Slave: ");
+    ata1s.Identify();
+
+    #ifdef __ATA_TESTS // ------------------------------------------------ ATA TESTS
+        printf("\n> ATA Tests ....................... CHECK\n");
+        char* ata_data = "Hello, World!";
+        ata0s.Write28(0, (uint8_t*)ata_data, 13);
+        ata0s.Flush();
+
+        char* result = "             \0";
+        ata0s.Read28(0, (uint8_t*)result, 13);
+        ata0s.Flush();
+
+        printf("Reading Result : ");
+        printf(result);
+    #endif
+
+    // .... More ATA at 0x1E8, 0x168, 0x3E0, 0x360
 
     interrupts.Activate();
     printf("\n> Interrupts Activated ............ CHECK\n\n");
