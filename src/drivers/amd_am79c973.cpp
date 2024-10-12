@@ -7,6 +7,7 @@ using namespace myos::drivers;
 using namespace myos::hardwarecommunication;
 
 void printf(char* str);
+void printHex(uint8_t key);
 
 AMD_AM79C973::AMD_AM79C973(myos::hardwarecommunication::PCIDeviceDescriptor* dev, myos::hardwarecommunication::InterruptManager* interrupts)
 : Driver(),
@@ -103,13 +104,57 @@ myos::common::uint32_t AMD_AM79C973::HandleInterrupt(myos::common::uint32_t esp)
     if ((temp & 0x2000) == 0x2000) printf("\nAMD Collision error");
     if ((temp & 0x1000) == 0x1000) printf("\nAMD Missed Frame");
     if ((temp & 0x0800) == 0x0800) printf("\nAMD Memory Error");
-    if ((temp & 0x0400) == 0x0400) printf("\nAMD Data Received");
+    if ((temp & 0x0400) == 0x0400) Receive();
     if ((temp & 0x0200) == 0x0200) printf("\nAMD Data Sent");
 
     registerAddressPort.Write(0);
     registerDataPort.Write(temp);
 
-    if ((temp & 0x0200) == 0x0200) printf("\nAMD INITIALIZING DONE");
+    if ((temp & 0x0100) == 0x0100) printf("\nAMD INITIALIZING DONE");
 
     return esp;
+};
+
+            
+void AMD_AM79C973::Send(myos::common::uint8_t* buffer, int size){
+    int sendDescriptor = currentSendBuffer;
+    currentSendBuffer = (currentSendBuffer + 1) % 8;
+
+    if (size > 1518) size = 1518;
+
+    for (uint8_t *src = buffer + size - 1, 
+        *dst = (uint8_t*)(sendBufferDescr[sendDescriptor].address + size - 1); 
+        src >= buffer; src--, dst--) {
+        *dst = *src;
+    }
+
+    sendBufferDescr[sendDescriptor].avail = 0;
+    sendBufferDescr[sendDescriptor].flags = 0x8300F000 | ((uint16_t)((-size) & 0xFFF));
+    sendBufferDescr[sendDescriptor].flags2 = 0;
+
+    registerAddressPort.Write(0);
+    registerDataPort.Write(0x48);
+};
+
+void AMD_AM79C973::Receive(){
+    printf("\nAMD AM79C973 RECEIVING");
+
+    for (; ((recvBufferDescr[currentRecvBuffer].flags) & 0x80000000 ); currentRecvBuffer = (currentRecvBuffer + 1) % 8){
+        if (!(recvBufferDescr[currentRecvBuffer].flags & 0x40000000) && (recvBufferDescr[currentRecvBuffer].flags & 0x03000000) == 0x03000000){
+
+            uint32_t size = recvBufferDescr[currentRecvBuffer].flags & 0xFFF;
+            if (size > 64) size -= 4;
+
+            uint8_t* buffer = (uint8_t*)(recvBufferDescr[currentRecvBuffer].address);
+            for (int i = 0; i < size; i++){
+                printHex(buffer[i]);
+            }
+
+            printf("\nReceived packet of size ");
+            printf((char*)size);
+        }
+
+        recvBufferDescr[currentRecvBuffer].flags2 = 0;
+        recvBufferDescr[currentRecvBuffer].flags = 0x8000F7FF;
+    }
 };

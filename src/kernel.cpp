@@ -9,6 +9,8 @@
 #include <multitasking.h>
 #include <memorymanagement.h>
 
+#include <drivers/amd_am79c973.h>
+
 using namespace myos;
 using namespace myos::common;
 using namespace myos::drivers;
@@ -16,8 +18,10 @@ using namespace myos::hardwarecommunication;
 
 // #define __ADD_TASKS
 // #define __DYNAMIC_MEMORY_TESTS
+// #define __AMD_AM79C973_TESTS
 
 void clrscr();
+void scrlDown(uint8_t lines = 1);
 void printHex(uint8_t key);
 
 void printf(char* str){
@@ -26,11 +30,6 @@ void printf(char* str){
     static uint8_t x=0, y=0;
     
     for (int i=0; str[i] != '\0'; i++){
-        if (x >= 80) { x = 0; y++; }
-        if (y >= 25){
-            clrscr();
-            x = y = 0;
-        }
         switch(str[i]){
             case '\n': x = 0; y++; break;
             case '\t': x += 4; break;
@@ -47,6 +46,11 @@ void printf(char* str){
                 VideoMemory[80*y+x] = (VideoMemory[80*y+x] & 0x8F00) | str[i];
                 x++;
         }
+        if (x >= 80) { x = 0; y++; }
+        if (y >= 25){
+            scrlDown(2);
+            x = 0; y = 23;
+        }
     }
 }
 
@@ -56,6 +60,28 @@ void printHex(uint8_t key){
     foo[0] = hex[(key >> 4) & 0x0F];
     foo[1] = hex[key & 0x0F];
     printf(foo);
+}
+
+void scrlDown(uint8_t lines){
+    if (lines == 0) return;
+    if (lines >= 25) {
+        clrscr(); return;
+    }
+
+    static uint16_t* VideoMemory = (uint16_t*)0xb8000;
+    uint8_t x = 0, y = 0;
+
+    for (int i = 0; i < 25-lines; i++){
+        for (int j = 0; j < 80; j++){
+            VideoMemory[80*i+j] = VideoMemory[80*(i+lines)+j];
+        }
+    }
+
+    for (int i = 25-lines; i < 25; i++){
+        for (int j = 0; j < 80; j++){
+            VideoMemory[80*i+j] = (VideoMemory[80*i+j] & 0xFF00);
+        }
+    }
 }
 
 void clrscr(){
@@ -178,6 +204,12 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     //         vga.PutPixel(x, y, 0x00, 0x00, 0xA8);
     //     }
     // }
+
+    #ifdef __AMD_AM79C973_TESTS // ---------------------------------------- AMD AM79C973 TESTS
+        AMD_AM79C973* eth0 = (AMD_AM79C973*)drvManager.drivers[2];
+        eth0->Send((uint8_t*)"Hello, World!", 13);
+    #endif
+
 
     interrupts.Activate();
     printf("\n> Interrupts Activated ............ CHECK\n\n");
