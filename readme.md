@@ -1,5 +1,12 @@
 # Operating System
 
+> [!CAUTION]
+> **Do Not Install on Your Main System**
+> 
+> **This operating system is under development and not suitable for general use.** Installing it on your primary system could potentially lead to data loss or system instability.
+> 
+> **For testing purposes only, please use a virtual machine like VirtualBox or VMware.**
+
 ![Operating System](./os.png)
 
 A 32-bit Operating System written from scratch in C++
@@ -29,3 +36,13 @@ make mykernel.iso
 ```
 
 3. Run on a Virtual Machine using VirtualBox or VM Ware
+
+# Disk Creation
+
+> In order to add a Master Boot Record to your Virtual Disk Image for virtualbox:
+
+```bash
+dd if=<disk.vdi> of=<disk.img>
+fdisk <disk.img>
+qemu-img convert <disk.img> -O vdi <disk.vdi>
+```

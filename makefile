@@ -14,6 +14,7 @@ objects = obj/loader.o \
 		  obj/drivers/amd_am79c973.o \
 		  obj/memorymanagement.o \
           obj/hardwarecommunication/pci.o \
+		  obj/filesystem/msdospart.o \
           obj/drivers/keyboard.o \
           obj/drivers/mouse.o \
 		  obj/drivers/vga.o \
@@ -53,6 +54,7 @@ mykernel.iso: mykernel.bin
 	rm -rf iso
 
 	make clean
+
 
 run: mykernel.bin
 		qemu-system-i386 -kernel mykernel.bin

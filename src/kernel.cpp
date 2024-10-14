@@ -13,10 +13,12 @@
 #include <drivers/ata.h>
 
 #include <syscalls.h>
+#include <filesystem/msdospart.h>
 
 using namespace myos;
 using namespace myos::common;
 using namespace myos::drivers;
+using namespace myos::filesystem;
 using namespace myos::hardwarecommunication;
 
 // #define __DYNAMIC_MEMORY_TESTS
@@ -224,9 +226,13 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     printf("\nATA Primary Master: ");
     ata0m.Identify();
 
+    MSDOSPartitionTable::ReadPartitions(&ata0m);
+
     AdvancedTechnologyAttachment ata0s(0x1F0, false);
     printf("\nATA Primary Slave: ");
     ata0s.Identify();
+
+    MSDOSPartitionTable::ReadPartitions(&ata0s);
 
     AdvancedTechnologyAttachment ata1m(0x170, true);
     printf("\nATA Secondary Master: ");
@@ -238,13 +244,18 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 
     #ifdef __ATA_TESTS // ------------------------------------------------ ATA TESTS
         printf("\n> ATA Tests ....................... CHECK\n");
-        char* ata_data = "Hello, World!";
-        ata0s.Write28(0, (uint8_t*)ata_data, 13);
-        ata0s.Flush();
+        // char* ata_data = "Hello, World!";
+        // ata0m.Write28(0, (uint8_t*)ata_data, 13);
+        // ata0m.Flush();
 
         char* result = "             \0";
-        ata0s.Read28(0, (uint8_t*)result, 13);
-        ata0s.Flush();
+        ata0m.Read28(0, (uint8_t*)result, 13);
+
+        for (int i=0; i<513; i++){
+            printHex((uint8_t)result[i]);
+            printf(" ");
+        }
+        ata0m.Flush();
 
         printf("Reading Result : ");
         printf(result);
