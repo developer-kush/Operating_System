@@ -25,6 +25,8 @@ using namespace myos::hardwarecommunication;
 // #define __AMD_AM79C973_TESTS
 // #define __ATA_TESTS
 // #define __SYSTEM_CALL_TASKS
+// #define __VGA_MODE
+// #define __READ_PARTITION_TABLE
 
 void clrscr();
 void scrlDown(uint8_t lines = 1);
@@ -186,8 +188,8 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
         taskManager.AddTask(&task2);
     #endif
 
-    printf("\n> Global Descriptor Table ......... CHECK");
-    printf("\n> Ports ........................... CHECK");
+    // printf("\n> Global Descriptor Table ......... CHECK");
+    // printf("\n> Ports ........................... CHECK");
     
     InterruptManager interrupts(0x20, &gdt, &taskManager);
     SyscallHandler syscalls(&interrupts, 0x80);
@@ -209,14 +211,6 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 
     drvManager.ActivateAll();
 
-    // vga.SetMode(320, 200, 8);
-
-    // for (uint32_t y=0; y<200; y++){
-    //     for (uint32_t x=0; x < 320; x++){
-    //         vga.PutPixel(x, y, 0x00, 0x00, 0xA8);
-    //     }
-    // }
-
     #ifdef __AMD_AM79C973_TESTS // ---------------------------------------- AMD AM79C973 TESTS
         AMD_AM79C973* eth0 = (AMD_AM79C973*)drvManager.drivers[2];
         eth0->Send((uint8_t*)"Hello, World!", 13);
@@ -226,27 +220,29 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     printf("\nATA Primary Master: ");
     ata0m.Identify();
 
-    MSDOSPartitionTable::ReadPartitions(&ata0m);
-
     AdvancedTechnologyAttachment ata0s(0x1F0, false);
     printf("\nATA Primary Slave: ");
     ata0s.Identify();
 
-    MSDOSPartitionTable::ReadPartitions(&ata0s);
+    // AdvancedTechnologyAttachment ata1m(0x170, true);
+    // printf("\nATA Secondary Master: ");
+    // ata1m.Identify();
 
-    AdvancedTechnologyAttachment ata1m(0x170, true);
-    printf("\nATA Secondary Master: ");
-    ata1m.Identify();
+    // AdvancedTechnologyAttachment ata1s(0x170, false);
+    // printf("\nATA Secondary Slave: ");
+    // ata1s.Identify();
 
-    AdvancedTechnologyAttachment ata1s(0x170, false);
-    printf("\nATA Secondary Slave: ");
-    ata1s.Identify();
+    // .... More ATA at 0x1E8, 0x168, 0x3E0, 0x360
 
-    #ifdef __ATA_TESTS // ------------------------------------------------ ATA TESTS
+    
+    #ifdef __READ_PARTITION_TABLE // ------------------------------------------ READ PARTITION TABLE
+        MSDOSPartitionTable::ReadPartitions(&ata0m);
+        MSDOSPartitionTable::ReadPartitions(&ata0s);
+        printf("\n> Reading Partition Table ........ CHECK\n");
+    #endif
+
+    #ifdef __ATA_TESTS // ----------------------------------------------------- ATA TESTS
         printf("\n> ATA Tests ....................... CHECK\n");
-        // char* ata_data = "Hello, World!";
-        // ata0m.Write28(0, (uint8_t*)ata_data, 13);
-        // ata0m.Flush();
 
         char* result = "             \0";
         ata0m.Read28(0, (uint8_t*)result, 13);
@@ -261,7 +257,19 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
         printf(result);
     #endif
 
-    // .... More ATA at 0x1E8, 0x168, 0x3E0, 0x360
+    #ifdef __VGA_MODE
+        vga.SetMode(320, 200, 8);
+
+        for (uint32_t y=0; y<200; y++){
+            for (uint32_t x=0; x < 320; x++){
+                if (x>=100 && x<220 && y>=100 && y<120){
+                    vga.PutPixel(x, y, 0x01);
+                } else {
+                    vga.PutPixel(x, y, 0x02);
+                }
+            }
+        }
+    #endif
 
     interrupts.Activate();
     printf("\n> Interrupts Activated ............ CHECK\n\n");

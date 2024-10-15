@@ -15,6 +15,7 @@ objects = obj/loader.o \
 		  obj/memorymanagement.o \
           obj/hardwarecommunication/pci.o \
 		  obj/filesystem/msdospart.o \
+		  obj/filesystem/fat.o \
           obj/drivers/keyboard.o \
           obj/drivers/mouse.o \
 		  obj/drivers/vga.o \
@@ -43,7 +44,7 @@ mykernel.iso: mykernel.bin
 	mkdir iso/boot
 	mkdir iso/boot/grub
 	cp mykernel.bin iso/boot/mykernel.bin
-	echo 'set timeout=0'                      > iso/boot/grub/grub.cfg
+	echo 'set timeout=0'                     >> iso/boot/grub/grub.cfg
 	echo 'set default=0'                     >> iso/boot/grub/grub.cfg
 	echo ''                                  >> iso/boot/grub/grub.cfg
 	echo 'menuentry "My Operating System" {' >> iso/boot/grub/grub.cfg

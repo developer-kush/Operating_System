@@ -81,8 +81,6 @@ void AdvancedTechnologyAttachment::Read28(uint32_t sector, uint8_t* data, int co
         printf("ERROR");
         return;
     }
-
-    printf("\nReading from ATA disk\n");
     for (uint16_t i = 0; i < count; i+=2){
         uint16_t wdata = dataPort.Read();
 
@@ -110,7 +108,6 @@ void AdvancedTechnologyAttachment::Write28(uint32_t sector, uint8_t* data, int c
     lbaHiPort.Write((sector & 0x000FF000) >> 16);
     commandPort.Write(0x30);
 
-    printf("\nWriting to ATA disk");
     for (uint16_t i = 0; i < count; i+=2){
         uint16_t wdata = data[i];
         if (i+1 < count){

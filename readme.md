@@ -10,9 +10,6 @@
 ![Operating System](./os.png)
 
 A 32-bit Operating System written from scratch in C++
- 
-> This project is in development
-> This Operating system is not meant for general usage, as this is a very bare-bones Operating System and made only for learning and educational purposes
 
 # Status
 
@@ -37,12 +34,10 @@ make mykernel.iso
 
 3. Run on a Virtual Machine using VirtualBox or VM Ware
 
-# Disk Creation
-
-> In order to add a Master Boot Record to your Virtual Disk Image for virtualbox:
-
-```bash
-dd if=<disk.vdi> of=<disk.img>
-fdisk <disk.img>
-qemu-img convert <disk.img> -O vdi <disk.vdi>
-```
+> [!TIP]
+> At this point, you can use a Lightweight Operating System like TinyCore Linux, to prepare the disk for testing :
+> - Use `sudo fdisk <disk ex: /dev/sda>` to make a partition table
+> - Use a tool like `mkfs.vfat` to make a **FAT32** file-system
+> - Mount the disk, and do `cd /mnt/sda1`
+> - Now you can create 2-3 files to try read from
+> - It will be a while before we create a **Directory Parser**, since we'll need to create a standard library using dynamic allocation before we get to 

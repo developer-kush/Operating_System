@@ -2,6 +2,7 @@
 # include <drivers/ata.h>
 # include <common/types.h>
 # include <filesystem/msdospart.h>
+# include <filesystem/fat.h>
 
 using namespace myos;
 using namespace myos::common;
@@ -20,12 +21,16 @@ void MSDOSPartitionTable::ReadPartitions(myos::drivers::AdvancedTechnologyAttach
         return;
     }
 
-    printf("\nMaster Boot Record:");
-    for (int i = 446; i < 446 + (4 * 16); i++){
-        printHex(((uint8_t*)&mbr)[i]); printf(" ");
-    }
+    // printf("\nMaster Boot Record:");
+    // for (int i = 446; i < 446 + (4 * 16); i++){
+    //     printHex(((uint8_t*)&mbr)[i]); printf(" ");
+    // }
 
     for (int i = 0; i < 4; i++){
+        if (mbr.primaryPartition[i].partition_id == 0x00){
+            continue;
+        }
+
         printf("\nPartition ");
         printHex( i & 0xFF); printf(" : ");
 
@@ -35,5 +40,7 @@ void MSDOSPartitionTable::ReadPartitions(myos::drivers::AdvancedTechnologyAttach
             printf("Not Bootable. Type:");
         }
         printHex(mbr.primaryPartition[i].partition_id);
+
+        ReadBiosBlock(hd, mbr.primaryPartition[i].start_lba);
     }
 };

@@ -74,22 +74,22 @@ void PCIController::SelectDrivers(DriverManager* driverManager, InterruptManager
                     driverManager->AddDriver(driver);
                 }
 
-                printf("\nPCI BUS:");
-                printHex(bus & 0xFF);
+                // printf("\nPCI BUS:");
+                // printHex(bus & 0xFF);
 
-                printf(", DEVICE: ");
-                printHex(device & 0xFF);
+                // printf(", DEVICE: ");
+                // printHex(device & 0xFF);
 
-                printf(", FUNCTION: ");
-                printHex(function & 0xFF);
+                // printf(", FUNCTION: ");
+                // printHex(function & 0xFF);
 
-                printf(" = VENDOR: ");
-                printHex((dev.vendor_id & 0xFF00)>>8);
-                printHex(dev.vendor_id & 0xFF);
+                // printf(" = VENDOR: ");
+                // printHex((dev.vendor_id & 0xFF00)>>8);
+                // printHex(dev.vendor_id & 0xFF);
 
-                printf(", DEVICE ID: ");
-                printHex((dev.device_id & 0xFF00)>>8);
-                printHex(dev.device_id & 0xFF);
+                // printf(", DEVICE ID: ");
+                // printHex((dev.device_id & 0xFF00)>>8);
+                // printHex(dev.device_id & 0xFF);
             }
         }
     }
